@@ -4,7 +4,14 @@ from pylab import rand
 from sklearn.model_selection import cross_val_score
 import os
 from tp5utils import chargementVecteursImages
-
+from sklearn.linear_model import Perceptron
+from sklearn.datasets import load_iris
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+import matplotlib.pyplot as plt
+from sklearn.svm import LinearSVC
+from sklearn.datasets import make_classification
 def noyauGaussien(x1, x2, sigma):
 	npx1 = np.array(x1)
 	npx2 = np.array(x2)
@@ -94,6 +101,46 @@ erreur = 0
 
 print(erreur)
 
-n, data, target, taille = chargementVecteursImages("./tp3-M1info2019/Data/Mer", "./tp3-M1info2019/Data/Ailleurs", 1, -1, 400)
-print(data)
-print(target)
+n, x, Y, taille = chargementVecteursImages("./tp3-M1info2019/Data/Mer", "./tp3-M1info2019/Data/Ailleurs", 1, -1, 200)
+y = np.array(Y)
+
+x2 = np.array(x)
+dataset_size = len(x2)
+X = x2.reshape(dataset_size,-1)
+
+result = []
+print("Perceptron fit")
+clf = Perceptron(tol=1e-3, random_state=0)
+result += [cross_val_score(clf, X, y, cv=10)]
+
+print("Tree fit")
+#clf = DecisionTreeClassifier(random_state=0, max_depth=10)
+#result += [cross_val_score(clf, X, y, cv=10)]
+
+print("kppv fit")
+clf = KNeighborsClassifier(n_neighbors=3)
+result += [cross_val_score(clf, X, y, cv=10)]
+
+print("svm")
+#clf = LinearSVC(random_state=0, tol=1e-5)
+#result += [cross_val_score(clf, X, y, cv=10)]
+
+
+plt.plot(result[0])
+plt.show()
+plt.figure()
+
+plt.plot(result[1])
+plt.show()
+plt.figure()
+
+
+print("Perceptron")
+print(result[0].mean())
+
+print("Tree")
+print(result[1].mean()) 
+
+
+print("kppv")
+print(result[2].mean())
