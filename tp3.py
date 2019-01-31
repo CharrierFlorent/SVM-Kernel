@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 def noyauGaussien(x1, x2, sigma):
 	npx1 = np.array(x1)
 	npx2 = np.array(x2)
-	return np.exp(-(pow(np.linalg.norm(npx1-npx2),2))/pow(sigma,2))
+	return np.exp(-(pow(np.linalg.norm(npx1-npx2),2))/float(pow(float(sigma),2)))
 
 def noyauPolynomial(x1,x2,k):
 	xa = np.array(x1)
@@ -78,30 +78,44 @@ y = np.array(Y)
 x2 = np.array(x)
 dataset_size = len(x2)
 X = x2.reshape(dataset_size, -1)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=42)
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.20, random_state=42)
 ecarttype = np.std(x)
 taux = []
 r = []
-for i in np.arange(0.1,2.0,0.1):
+for i in np.arange(1,20,1):
 	r += [i]
-
+k = 0
 for i in r:
-	print(i)
-	p = learnKernelPerceptron(X_train,y_train,1,i)
+	k+=1
+	p = learnKernelPerceptron(X_train,y_train,0,i)
 
 
 	erreur = 0
-	for i in range(len(y_test)):
-		ok = predictKernelPerceptron(p,X_test[i],X_train,y_train,1,i)
-		if(ok != y_test[i]):
+	for i in range(len(y_val)):
+		ok = predictKernelPerceptron(p,X_val[i],X_val,y_val,1,i)
+		if(ok != y_val[i]):
 			erreur += 1
 
-	taux += [1-erreur/len(y_test)]
+	taux += [1-erreur/len(y_val)]
+k = 0
+for i in r:
+	print("d " + str(i) + " score : " + str(taux[k]))
+	k += 1
+err = []
+print(np.argmax(np.array(taux)))
+erreur = 0
+j = 0
+for k in r:
+	if k == np.argmax(np.array(taux)):
+		p = learnKernelPerceptron(X_train, y_train, 0, k)
+		for i in range(len(y_test)):
+			ok = predictKernelPerceptron(p, X_test[j], X_train, y_train, 1, i)
+			if (ok != y_val[j]):
+				erreur += 1
 
-plt.plot(r, taux)
-plt.show()
-plt.figure()
-
+		print("erreur test : ", 1 - erreur / len(y_test))
+	j+=1
 
 p2 = learnKernelPerceptron(X_train,y_train,1,ecarttype)
 
@@ -115,127 +129,3 @@ for i in range(len(y_test)):
 
 print(1-erreur/len(y_test))
 
-
-
-X = []
-y = []
-X_train = []
-X_test = []
-y_train = []
-y_test = []
-j = 0
-"""
-for i in (range(10,60,5)):
-	n, x, Y, taille = chargementVecteursImages("./tp3-M1info2019/Data/Mer", "./tp3-M1info2019/Data/Ailleurs", 1, -1, i)
-	y += [np.array(Y)]
-	x2 = np.array(x)
-	dataset_size = len(x2)
-	X += [x2.reshape(dataset_size, -1)]
-	X_train1, X_test1, y_train1, y_test1 = train_test_split(X[j], y[j], test_size=0.33, random_state=42)
-	X_train += [X_train1]
-	X_test += [X_test1]
-	y_train += [y_train1]
-	y_test += [y_test1]
-
-	j += 1
-
-	print(i)
-
-n, x, Y, taille = chargementVecteursImages("./tp3-M1info2019/Data/Mer", "./tp3-M1info2019/Data/Ailleurs", 1, -1, 225)
-y += [np.array(Y)]
-x2 = np.array(x)
-dataset_size = len(x2)
-X += [x2.reshape(dataset_size, -1)]
-X_train1, X_test1, y_train1, y_test1 = train_test_split(X, y, test_size=0.33, random_state=42)
-X_train += [X_train1]
-X_test += [X_test1]
-y_train += [y_train1]
-y_test += [y_test1]
-"""
-
-n, x, Y, taille = chargementHistogrammesImages("./tp3-M1info2019/Data/Mer", "./tp3-M1info2019/Data/Ailleurs", 1, -1)
-y = np.array(Y)
-x2 = np.array(x)
-dataset_size = len(x2)
-X = x2.reshape(dataset_size, -1)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
-result = []
-
-"""
-print("Perceptron fit")
-for i in range(0,10):
-	clf = Perceptron(tol=1e-3, random_state=0, max_iter = 40, class_weight='balanced')
-	result += [cross_val_score(clf, X_train[i], y_train[i], cv=10).mean()]
-	clf.fit(X_train[i], y_train[i])
-	print("perceptron score : ", clf.score(X_test[i], y_test[i]))
-"""
-
-
-result_tree = []
-data = []
-data_train = []
-print("Tree fit")
-clf = Perceptron(random_state=0)
-clf.fit(X_train, y_train)
-print("Taux de bonne classification : %f" %clf.score(X_test, y_test))
-print("crolss val default : ", cross_val_score(clf, X_train, y_train, cv=10).mean())
-print("default")
-r = []
-for i in range(10,110,10):
-	r += [i]
-for i in range(1000,4000,1000):
-	r += [i]
-for i in r:
-	clf = Perceptron(random_state=0, max_iter=i)
-	clf.fit(X_train, y_train)
-	data += [clf.score(X_test, y_test)]
-	print("Taux de bonne classification : %f " % clf.score(X_test, y_test), i)
-	result_tree += [cross_val_score(clf, X_train, y_train, cv=10).mean()]
-	print("cross val ", i, cross_val_score(clf, X_train, y_train, cv=10).mean())
-
-plt.plot(r,data)
-plt.show()
-plt.figure()
-plt.plot(r, result_tree)
-plt.show()
-plt.figure()
-
-print("kppv fit")
-#clf = KNeighborsClassifier(n_neighbors=3)
-#result += [cross_val_score(clf, X, y, cv=10)]
-
-print("svm")
-#clf = LinearSVC(random_state=0, tol=1e-5)
-#result += [cross_val_score(clf, X, y, cv=10)]
-
-"""
-plt.plot(result[0])
-plt.show()
-plt.figure()
-
-plt.plot(result[1])
-plt.show()
-plt.figure()
-
-plt.plot(result[2])
-plt.show()
-plt.figure()
-
-plt.plot(result[3])
-plt.show()
-plt.figure()
-
-print("Perceptron")
-for i in range(0,10):
-	print(result[i])
-"""
-print("Tree")
-#for i in range(0,10):
-#	print(result_tree[i])
-"""
-print("kppv")
-print(result[2].mean())
-
-print("svm")
-print(result[3].mean())
-"""
